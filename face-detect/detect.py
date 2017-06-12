@@ -8,7 +8,7 @@ import cv2
 
 #Initialize a face cascade using the frontal face haar cascade provided with
 #the OpenCV library
-faceCascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
+faceCascade = cv2.CascadeClassifier('../models/haarcascade_frontalface_default.xml')
 
 #The deisred output width and height
 OUTPUT_SIZE_WIDTH = 775
