@@ -11,12 +11,6 @@ import dlib
 import threading
 import time
 
-#Initialize a face cascade using the frontal face haar cascade provided with
-#the OpenCV library
-#Make sure that you copy this file from the opencv project to the root of this
-#project folder
-faceCascade = cv2.CascadeClassifier('../models/haarcascade_frontalface_default.xml')
-
 #The deisred output width and height
 OUTPUT_SIZE_WIDTH = 775
 OUTPUT_SIZE_HEIGHT = 600
@@ -55,6 +49,8 @@ def detectAndTrackMultipleFaces():
     #Variables holding the correlation trackers and the name per faceid
     faceTrackers = {}
     faceNames = {}
+
+    detector = dlib.get_frontal_face_detector()
 
     try:
         while True:
@@ -127,8 +123,13 @@ def detectAndTrackMultipleFaces():
                 gray = cv2.cvtColor(baseImage, cv2.COLOR_BGR2GRAY)
                 #Now use the haar cascade detector to find all faces
                 #in the image
-                faces = faceCascade.detectMultiScale(gray, 1.3, 5)
 
+                dets = detector(gray, 1)
+                faces=[]
+                for i, d in enumerate(dets):
+                    print("Detection {}: Left: {} Top: {} Right: {} Bottom: {}".format(
+                        i, d.left(), d.top(), d.right(), d.bottom()))
+                    faces.append((d.left(), d.top(), d.right()-d.left(), d.bottom()-d.top()))
 
 
                 #Loop over all faces and check if the area for this
@@ -180,6 +181,16 @@ def detectAndTrackMultipleFaces():
                              ( x   <= t_x_bar <= (x   + w  )) and
                              ( y   <= t_y_bar <= (y   + h  ))):
                             matchedFid = fid
+                            faceTrackers[ matchedFid ]=None
+                            #Create and store the tracker
+                            tracker = dlib.correlation_tracker()
+                            tracker.start_track(baseImage,
+                                                dlib.rectangle( x,
+                                                                y,
+                                                                x+w,
+                                                                y+h))
+
+                            faceTrackers[ matchedFid ] = tracker
 
 
                     #If no matched fid, then we have to create a new tracker
@@ -190,10 +201,10 @@ def detectAndTrackMultipleFaces():
                         #Create and store the tracker
                         tracker = dlib.correlation_tracker()
                         tracker.start_track(baseImage,
-                                            dlib.rectangle( x-10,
-                                                            y-20,
-                                                            x+w+10,
-                                                            y+h+20))
+                                            dlib.rectangle( x,
+                                                            y,
+                                                            x+w,
+                                                            y+h))
 
                         faceTrackers[ currentFaceID ] = tracker
 
